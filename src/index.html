@@ -37,17 +37,17 @@
    <div id="three" style="position: relative; z-index:100;">
     <div style="display: flex; flex-direction: column; align-items: flex-end;  position: fixed; top: 10px; right: 2vw;  color: red;">
         <p style="border: 1px solid black; padding: 5px;">对象：<sapn id="current"></sapn></p>
-        <p id="seconds" style="border: 1px solid black; padding: 5px;">秒數：30</p>
+        <!-- <p id="seconds" style="border: 1px solid black; padding: 5px;">秒數：30</p>
         <p id="score" style="border: 1px solid black; padding: 5px;">分數：0</p>
-        <button id="startButton" style="padding: 5px;width: 78px; border-radius: 10%;">背景音樂</button>
+        <button id="startButton" style="padding: 5px;width: 78px; border-radius: 10%;">背景音樂</button> -->
       </div>
     </div>
   </div>
 
-  <video style="position: absolute; left: 0; top: 0; width: 100%;  height: 100%; z-index:-100; "/>
+  <!-- <video style="position: absolute; left: 0; top: 0; width: 100%;  height: 100%; z-index:-100; "/>
   
   <audio id="backgroundMusic" loop  preload="auto" style="border: 1px solid black; padding: 5px; display: none" ><source src="14028.mp3" type="audio/mp3"> </audio>
-  <audio id="rabbitMusic" preload="auto" style="display: none">  <source src="14289.mp3" type="audio/mp3"> </audio>
+  <audio id="rabbitMusic" preload="auto" style="display: none">  <source src="14289.mp3" type="audio/mp3"> </audio> -->
 
 <!-- 禁止縮放 -->  
 <script>
@@ -191,13 +191,12 @@
         window.addEventListener('resize', onWindowResize);
 
         // 陀螺仪控制器
-        // controls = new DeviceOrientationControls(camera);
-        // controls.connect();
+        controls = new DeviceOrientationControls(camera);
+        controls.connect();
        
         // 轨迹控制器
-         controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0, 0);
-        // controls.update();
+        // controls = new OrbitControls(camera, renderer.domElement);
+        // controls.target.set(0, 0, 0);
 
         plane();
         cube();
