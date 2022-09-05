@@ -37,17 +37,17 @@
    <div id="three" style="position: relative; z-index:100;">
     <div style="display: flex; flex-direction: column; align-items: flex-end;  position: fixed; top: 10px; right: 2vw;  color: red;">
         <p style="border: 1px solid black; padding: 5px;">对象：<sapn id="current"></sapn></p>
-        <!-- <p id="seconds" style="border: 1px solid black; padding: 5px;">秒數：30</p>
+        <p id="seconds" style="border: 1px solid black; padding: 5px;">秒數：30</p>
         <p id="score" style="border: 1px solid black; padding: 5px;">分數：0</p>
-        <button id="startButton" style="padding: 5px;width: 78px; border-radius: 10%;">背景音樂</button> -->
+        <button id="startButton" style="padding: 5px;width: 78px; border-radius: 10%;">背景音樂</button>
       </div>
     </div>
   </div>
 
-  <!-- <video style="position: absolute; left: 0; top: 0; width: 100%;  height: 100%; z-index:-100; "/>
+  <video style="position: absolute; left: 0; top: 0; width: 100%;  height: 100%; z-index:-100; "/>
   
   <audio id="backgroundMusic" loop  preload="auto" style="border: 1px solid black; padding: 5px; display: none" ><source src="14028.mp3" type="audio/mp3"> </audio>
-  <audio id="rabbitMusic" preload="auto" style="display: none">  <source src="14289.mp3" type="audio/mp3"> </audio> -->
+  <audio id="rabbitMusic" preload="auto" style="display: none">  <source src="14289.mp3" type="audio/mp3"> </audio>
 
 <!-- 禁止縮放 -->  
 <script>
@@ -150,7 +150,7 @@
 
         //添加一个透视相机   多少度视角，相机的宽高比，从距离相机多远的位置开始渲染，距离相机多远的位置截止渲染
         camera = new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight, 1, 200000);
-        camera.position.set(0, 1200, 0);//设置相机位置
+        camera.position.set(0, 50000, 0);//设置相机位置
         // camera.rotation.set(0, 0, 0)
         // camera.up.x = 1;//相机以哪个方向为上方
         // camera.up.y = 0;
@@ -173,7 +173,7 @@
       
         //给场景添加光源(会影响兔兔颜色)
         var light= new THREE.PointLight(0xffffff);
-        light.position.set(0,2000,0);
+        light.position.set(0,50000,0);
         scene.add(light);  
 
         // 自然光(会影响兔兔颜色)
@@ -191,24 +191,24 @@
         window.addEventListener('resize', onWindowResize);
 
         // 陀螺仪控制器
-        controls = new DeviceOrientationControls(camera);
-        controls.connect();
+        // controls = new DeviceOrientationControls(camera);
+        // controls.connect();
        
         // 轨迹控制器
-        // controls = new OrbitControls(camera, renderer.domElement);
-        // controls.target.set(0, 0, 0);
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 0, 0);
 
         plane();
-        cube();
+        cube(rollOverMeshs);
         // timers();//30秒重新開始
         backgroundMusic();//音樂
-        moveEvent();
+  
     }
 
     //创建一个平面
     function plane(){
       // 创建一个圆形平面，半径20，圆周方向细分數30
-      var plane = new THREE.CircleGeometry(100,25)
+      var plane = new THREE.CircleGeometry(10000,25)
       var material = new THREE.MeshPhongMaterial({
             color:0x000000,//白色 0x999999黑色 000000
             // 矩形平面网格模型默认单面显示，可以设置side属性值为THREE.DoubleSide双面显示
@@ -221,7 +221,7 @@
         scene.add(mesh);//将平面添加到场景中
   
         // 地板線條 
-        const gridHelper = new THREE.GridHelper( 1000, 25 );
+        const gridHelper = new THREE.GridHelper( 50000, 25 );
         scene.add( gridHelper );
     }
 
@@ -268,11 +268,16 @@
         const loader = new GLTFLoader();
         for(var i=0;i<4;i++){
             const position=[]
+            // x z轴值
+            for(let k=0;k<2;k++){
+              const positionIndex= Math.floor(Math.random() * 4)
+              position.push(random(positionIndex,80000,10000+50000))//第二位參數
+            }
             loader.load('Voxel_RabbitB.glb', function (gltf) {
                    currentNum++      
                     // 设置模型缩放比例
-                    gltf.scene.scale.set(500,500,500);
-                    gltf.scene.position.set(positions[currentNum-1].x,positions[currentNum-1].y,positions[currentNum-1].z)
+                    gltf.scene.scale.set(80000,80000,80000);
+                    gltf.scene.position.set(position[0],0, position[1])
     
                     // 为了让模型加载为合适的姿势
                     // gltf.scene.rotation.y =  Math.PI; 
@@ -312,16 +317,17 @@
                     
                 scene.add(gltf.scene);
                 render();
+                moveEvent();
             }
             );
         }
     }
-  
+
     //渲染
     function render(){
         renderer.render(scene, camera);
     }
-    
+
     // 點擊事件
     function onClick( event ) {
         event.preventDefault();
@@ -348,6 +354,7 @@
     function removeEvent(object){
         // 點擊模型坐標
         const gltfIndex=GLTFobjects.findIndex(gltf=>gltf.name==object.name)
+
         if(gltfIndex!=-1){
             if(!emptyNums.includes(gltfIndex)){
                 emptyNums.push(gltfIndex)
@@ -453,6 +460,7 @@
 
       // 自動移動事件
       function moveEvent(){
+        console.log(rollOverMeshs)
       for(let i=0;i<rollOverMeshs.length;i++){
         pageTimer[rollOverMeshs[i].name]=setInterval(()=>{
           // x處理
@@ -479,6 +487,7 @@
     // 點擊移動事件
     function moveClick(object){
       const objectMesh=rollOverMeshs.find(mesh=>mesh.name==object.name)
+
       // 清除自動移動的定時
       clearInterval(pageTimer[objectMesh.name])
       // 快速回退
