@@ -93,8 +93,8 @@
     // mixer 和動畫有關
     let mixer1,mixer2,mixer3,mixer4;
 
-    const distance=10000;//移動距離
-    const innerNum=60000//距離圓形多少停下 最小邊界
+    const distance=1000;//移動距離
+    const innerNum=12000//距離圓形多少停下 最小邊界
     const maxNum=140000
 
     // 多個對象
@@ -218,35 +218,15 @@
         scene.add( gridHelper );
     }
 
-
     function random(state,value,min) {
-        switch(state){
-            case 0: //  x  z
-            value=value
-            min=min
-            break;
-            case 1: //  x -z 
-            value=value
-            min=-min
-            break;
-            case 2: // -x  z
-            value=-value
-            min=min
-            break;
-            case 3: // -x -z
-            value=-value
-            min=-min
-            break;
-        }
-        return Math.floor(Math.random() * value+min);
+        return state==0?Math.floor(Math.random() * value)+min:-(Math.floor(Math.random() * value)+min);
     }
 
     let GLTFobjects=[]//模型對象 用於刪除功能
     let allActions=[]
+    const startPostions={}
     //  创建一个模型
     function cube(){
-    
-
         let currentNum=0
          // 加载模型
         const loader = new GLTFLoader();
@@ -254,18 +234,15 @@
             const position=[]
             // x z轴值
             for(let k=0;k<2;k++){
-              const positionIndex= Math.floor(Math.random() * 4)
-              position.push(random(positionIndex,80000,innerNum))//第二位參數
+              const positionIndex= Math.floor(Math.random() * 2)//四個坐標系
+              position.push(random(positionIndex,50000,innerNum))//第二位參數
             }
             loader.load('Voxel_RabbitB.glb', function (gltf) {
                    currentNum++      
                     // 设置模型缩放比例
                     gltf.scene.scale.set(80000,80000,80000);
                     gltf.scene.position.set(position[0],0, position[1])
-    
-                    // 为了让模型加载为合适的姿势
-                    // gltf.scene.rotation.y =  Math.PI; 
-
+                    startPostions[`cube${currentNum}`]={x:position[0],z:position[1]}// 模型原始坐標
                     const mixer = new THREE.AnimationMixer(gltf.scene);
      
                     //   動畫類型  Walk、Run、Eat、Jump、Idle、Rest  
@@ -296,12 +273,12 @@
                         if(child.type === "Group") {
                             GLTFobjects.push(child);
                             rollOverMeshs.push(child);
+                          
+                            moveAutoEvent(child);
                         }
                     });
-                    
                 scene.add(gltf.scene);
                 render();
-                moveEvent();
             }
             );
         }
@@ -338,7 +315,6 @@
     function removeEvent(object){
         // 點擊模型坐標
         const gltfIndex=GLTFobjects.findIndex(gltf=>gltf.name==object.name)
-
         if(gltfIndex!=-1){
             if(!emptyNums.includes(gltfIndex)){
                 emptyNums.push(gltfIndex)
@@ -426,7 +402,6 @@
                 }
             }
         },1000)
-
         // 點擊兔子播放音樂
     }
 
@@ -441,95 +416,153 @@
         });
     }
 
-
-      // 自動移動事件
-      function moveEvent(){
-        console.log(rollOverMeshs)
-       for(let i=0;i<rollOverMeshs.length;i++){
-        pageTimer[rollOverMeshs[i].name]=setInterval(()=>{
-          // x處理
-          if(rollOverMeshs[i].position.x>innerNum){
-            rollOverMeshs[i].position.x= rollOverMeshs[i].position.x-distance
-            if(rollOverMeshs[i].x<innerNum)clearInterval(pageTimer[rollOverMeshs[i].name])
-          }else if(rollOverMeshs[i].position.x<-innerNum){
-            rollOverMeshs[i].position.x= rollOverMeshs[i].position.x+distance
-            if(rollOverMeshs[i].position.x>-innerNum)clearInterval(pageTimer[rollOverMeshs[i].name])
+    // 單個自動移動事件
+    function moveAutoEvent(object){
+      console.log(1212,object.position)
+      // 自動移動
+      pageTimer[object.name]=setInterval(()=>{
+        const  xz=calcHypotenuse(object.position.x,  object.position.z) //第三邊
+        const x=Math.abs(object.position.x)//用於處理偏移量
+        const z=Math.abs(object.position.z)//用於處理偏移量
+        // x處理
+        if(object.position.x>0 && object.position.z>0&&xz>=innerNum){ // x  z 
+          // console.log(111,object.name,object.position.x, object.position.z)
+          if(x==z){//45度角傾斜
+            object.position.x-= distance
+            object.position.z-= distance
+          }else if(x>z){//0-45度角
+            object.position.x-= distance
+            object.position.z-= distance*( Math.abs( object.position.z)/Math.abs(object.position.x))
+          }else if(z>x){//45-90度角
+            object.position.x-= distance*( Math.abs( object.position.x)/Math.abs(object.position.z))
+            object.position.z-= distance
           }
-          // z處理
-          if(rollOverMeshs[i].position.z>innerNum){
-            rollOverMeshs[i].position.z= rollOverMeshs[i].position.z-distance
-            if(rollOverMeshs[i].z<innerNum)clearInterval(pageTimer[rollOverMeshs[i].name])
-          }else if(rollOverMeshs[i].position.z<-innerNum){
-            rollOverMeshs[i].position.z= rollOverMeshs[i].position.z+distance
-            if(rollOverMeshs[i].position.z>-innerNum)clearInterval(pageTimer[rollOverMeshs[i].name])
+        }else if(object.position.x>0 && object.position.z<0&&xz>=innerNum) {  // x -z 
+          // console.log(222, object.name,object.position.x, object.position.z)
+          if(x==z){//315度角傾斜
+            object.position.x-= distance
+            object.position.z+= distance
+          }else if(x>z){//315-360
+            object.position.x-= distance
+            object.position.z+= distance*( Math.abs( object.position.z)/Math.abs(object.position.x))
+          }else if(z>x){//270-315度角
+            object.position.x-= distance*( Math.abs( object.position.x)/Math.abs(object.position.z))
+            object.position.z+= distance
           }
-          render();
-        },mathRandow())
-      }
+        }else if(object.position.x<0 && object.position.z>0 &&xz>=innerNum){  // -x  z 
+          // console.log(333,object.name,object.position.x, object.position.z)
+          if(x==z){//135
+            object.position.x+= distance
+            object.position.z-= distance
+          }else if(x>z){//135-180
+            object.position.x+=  distance
+            object.position.z-= distance*( Math.abs( object.position.z)/Math.abs(object.position.x))
+          }else if(z>x){//90-135
+            object.position.x+= distance*( Math.abs( object.position.x)/Math.abs(object.position.z))
+            object.position.z-= distance
+          }
+        }else if(object.position.x< 0 && object.position.z<0 && xz>=innerNum ){ // -x -z 
+          // console.log(444,object.name,object.position.x, object.position.z)
+          if(x==z){//225
+            object.position.x+= distance
+            object.position.z+= distance
+          }else if(x>z){//180-225
+            object.position.x+= distance
+            object.position.z+=distance*( Math.abs( object.position.z)/Math.abs(object.position.x))
+          }else if(z>x){//225-270
+            object.position.x+= distance*(Math.abs( object.position.x)/Math.abs(object.position.z))
+            object.position.z+= distance
+          }
+        }
+        if(xz <= innerNum){
+            clearInterval(pageTimer[object.name])
+        }
+        render();
+      },mathRandow())
     }
      
     // 點擊移動事件
     function moveClick(object){
+      let xz,x,z;
       const objectMesh=rollOverMeshs.find(mesh=>mesh.name==object.name)
-
-      // 清除自動移動的定時
+      // 清除原有定時器
       clearInterval(pageTimer[objectMesh.name])
       // 快速回退
       pageTimer[objectMesh.name]=setInterval(()=>{
-          // x處理
-          if(objectMesh.position.x>=innerNum){
-            objectMesh.position.x=distance+objectMesh.position.x
-            if(objectMesh.position.x>=maxNum){
-              clearInterval(pageTimer[objectMesh.name])
-              clickAutoMove(objectMesh)
-            }
-          }else if(objectMesh.position.x<=-innerNum){
-            objectMesh.position.x-=distance
-            if(objectMesh.position.x<=-maxNum){
-              clearInterval(pageTimer[objectMesh.name])
-              clickAutoMove(objectMesh)
-            }
+        xz=calcHypotenuse(objectMesh.position.x,  objectMesh.position.z) //第三邊
+        x=Math.abs(objectMesh.position.x)//用於處理偏移量
+        z=Math.abs(objectMesh.position.z)//用於處理偏移量
+        // x處理
+        if(objectMesh.position.x>0 && objectMesh.position.z>0){ // x  z 
+          // console.log(111,objectMesh.name,objectMesh.position.x, objectMesh.position.z)
+          if(x==z){//45度角傾斜
+            objectMesh.position.x+= distance
+            objectMesh.position.z+= distance
+          }else if(x>z){//0-45度角
+            objectMesh.position.x+= distance
+            objectMesh.position.z+= distance*( Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x))
+          }else if(z>x){//45-90度角
+            objectMesh.position.x+= distance*( Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z))
+            objectMesh.position.z+= distance
           }
-
-          // z處理
-          if(objectMesh.position.z>=innerNum){
-            objectMesh.position.z+=distance
-            if(objectMesh.position.z>=maxNum){
-              clearInterval(pageTimer[objectMesh.name])
-              clickAutoMove(objectMesh)
-            } 
-          }else if(objectMesh.position.z<=-innerNum){
-            objectMesh.position.z-=distance
-            if(objectMesh.position.z<=-maxNum){
-              clearInterval(pageTimer[objectMesh.name])
-              clickAutoMove(objectMesh)
-            } 
+        }else if(objectMesh.position.x>0 && objectMesh.position.z<0) {  // x -z 
+          // console.log(222, objectMesh.name,objectMesh.position.x, objectMesh.position.z)
+          if(x==z){//315度角傾斜
+            objectMesh.position.x+= distance
+            objectMesh.position.z-= distance
+          }else if(x>z){//315-360
+            objectMesh.position.x+= distance
+            objectMesh.position.z-= distance*( Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x))
+          }else if(z>x){//270-315度角
+            objectMesh.position.x+= distance*( Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z))
+            objectMesh.position.z-= distance
           }
+        }else if(objectMesh.position.x<0 && objectMesh.position.z>0 ){  // -x  z 
+          // console.log(333,objectMesh.name,objectMesh.position.x, objectMesh.position.z)
+          if(x==z){//135
+            objectMesh.position.x-= distance
+            objectMesh.position.z+= distance
+          }else if(x>z){//135-180
+            objectMesh.position.x-= distance
+            objectMesh.position.z+= distance*( Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x))
+          }else if(z>x){//90-135
+            objectMesh.position.x-= distance*( Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z))
+            objectMesh.position.z+= distance
+          }
+        }else if(objectMesh.position.x< 0 && objectMesh.position.z<0  ){ // -x -z 
+          // console.log(444,objectMesh.name,objectMesh.position.x, objectMesh.position.z)
+          if(x==z){//225
+            objectMesh.position.x-= distance
+            objectMesh.position.z-= distance
+          }else if(x>z){//180-225
+            objectMesh.position.x-= distance
+            objectMesh.position.z-=distance*( Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x))
+          }else if(z>x){//225-270
+            objectMesh.position.x-= distance*(Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z))
+            objectMesh.position.z-= distance
+          }
+        }
+        
+         const objectCurrent=startPostions[object.name]
+         const objectXZ = calcHypotenuse(objectCurrent.x,  objectCurrent.z)//原始邊長
+        //  console.log(xz,objectXZ,objectCurrent)
+         if(xz>=objectXZ){//回退的邊長大於初始邊長
+          //清除定時器
+          clearInterval(pageTimer[objectMesh.name])
+          //重置坐標
+          objectMesh.position.x= objectCurrent.x
+          objectMesh.position.z= objectCurrent.z
+          // 重新從邊界跑向中心
+          moveAutoEvent(objectMesh)
+         }
           render();
-      },10)
-
-    }
-
-    // 單個边界判断
-    function clickAutoMove(objectMesh){
-          // x處理
-          if(objectMesh.position.x>=maxNum){
-            oneAutoMove(objectMesh,mathRandow())
-          }else if(objectMesh.position.x<=-maxNum){
-            oneAutoMove(objectMesh,mathRandow())
-          }
-          // z處理
-          if(objectMesh.position.z >= maxNum){
-            oneAutoMove(objectMesh,mathRandow())
-          }else if(objectMesh.position.z <= -maxNum){
-            oneAutoMove(objectMesh,mathRandow())
-          }
+      },1)
     }
 
     // 單個移動事件
     function oneAutoMove(objectMesh,randomTimer){
       pageTimer[objectMesh.name]=setInterval(()=>{
-        // console.log(objectMesh.position.x,objectMesh.position.z,pageTimer[objectMesh.name])
+          // console.log(objectMesh.position.x,objectMesh.position.z,pageTimer[objectMesh.name])
           // x處理
           if(objectMesh.position.x>=innerNum){
             objectMesh.position.x= objectMesh.position.x-distance
@@ -551,8 +584,14 @@
         }, randomTimer)
     }
 
+    // 隨機速度
     function mathRandow(){
       return  Math.floor(Math.random()*100+20)
+    }
+
+    // 第三邊
+    function calcHypotenuse(a, b) {
+      return (Math.sqrt((a * a) + (b * b)));
     }
 
 </script>
