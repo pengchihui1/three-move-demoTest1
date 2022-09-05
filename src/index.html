@@ -93,18 +93,11 @@
     // mixer 和動畫有關
     let mixer1,mixer2,mixer3,mixer4;
 
-    const distance=10;//移動距離
-    const innerNum=120//距離圓形多少停下
-    const maxNum=480
+    const distance=10000;//移動距離
+    const innerNum=60000//距離圓形多少停下 最小邊界
+    const maxNum=140000
 
-      // 初始坐標
-    const positions=[
-        {x:-maxNum,y:0,z:0},
-        {x:maxNum,y:0,z:0},
-        {x:0,y:0,z:maxNum},
-        {x:0,y:0,z:-maxNum},
-    ]
-       // 多個對象
+    // 多個對象
     const rollOverMeshs=[]
     const pageTimer = {};  // 计时器数组
 
@@ -252,16 +245,7 @@
     let allActions=[]
     //  创建一个模型
     function cube(){
-        // 多個方塊
-        // for(let i=0;i<4;i++){
-        //     const rollOverGeo = new THREE.BoxGeometry( 50, 50, 50 );
-        //     rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
-        //     rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-        //     rollOverMesh.position.set(positions[i].x,positions[i].y,positions[i].z)
-        //     rollOverMesh.name=`cube${i}`
-        //     rollOverMeshs.push(rollOverMesh);
-        //     scene.add( rollOverMesh );
-        // }
+    
 
         let currentNum=0
          // 加载模型
@@ -271,7 +255,7 @@
             // x z轴值
             for(let k=0;k<2;k++){
               const positionIndex= Math.floor(Math.random() * 4)
-              position.push(random(positionIndex,80000,10000+50000))//第二位參數
+              position.push(random(positionIndex,80000,innerNum))//第二位參數
             }
             loader.load('Voxel_RabbitB.glb', function (gltf) {
                    currentNum++      
@@ -461,7 +445,7 @@
       // 自動移動事件
       function moveEvent(){
         console.log(rollOverMeshs)
-      for(let i=0;i<rollOverMeshs.length;i++){
+       for(let i=0;i<rollOverMeshs.length;i++){
         pageTimer[rollOverMeshs[i].name]=setInterval(()=>{
           // x處理
           if(rollOverMeshs[i].position.x>innerNum){
