@@ -172,16 +172,16 @@
         window.addEventListener('resize', onWindowResize);
 
         // 陀螺仪控制器
-        controls = new DeviceOrientationControls(camera);
-        controls.connect();
+        // controls = new DeviceOrientationControls(camera);
+        // controls.connect();
        
         // 轨迹控制器
-        // controls = new OrbitControls(camera, renderer.domElement);
-        // controls.target.set(0, 0, 0);
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 0, 0);
 
         plane();
         cube(rollOverMeshs);
-        timers();//30秒重新開始
+        // timers();//30秒重新開始
         backgroundMusic();//音樂
     }
 
@@ -319,6 +319,8 @@
 
     // 單個自動移動事件
     function moveAutoEvent(object){
+      const objectCurrent=startPostions[object.name]
+      console.log(objectCurrent)
       let xz,x,z
       // if(pageTimer[object.name]){clearInterval(pageTimer[object.name])}
       // 自動移動
@@ -334,9 +336,9 @@
             object.position.z-= distance
           }else if(x>z){//0-45度角
             object.position.x-= distance
-            object.position.z-= distance*( Math.abs( object.position.z)/Math.abs(object.position.x))
+            object.position.z-= distance*( Math.abs(objectCurrent.z)/Math.abs(objectCurrent.x))
           }else if(z>x){//45-90度角
-            object.position.x-= distance*( Math.abs( object.position.x)/Math.abs(object.position.z))
+            object.position.x-= distance*( Math.abs(objectCurrent.x)/Math.abs(objectCurrent.z))
             object.position.z-= distance
           }
         }else if(object.position.x>0 && object.position.z<0&&xz>=innerNum) {  // x -z 
@@ -346,9 +348,9 @@
             object.position.z+= distance
           }else if(x>z){//315-360
             object.position.x-= distance
-            object.position.z+= distance*( Math.abs( object.position.z)/Math.abs(object.position.x))
+            object.position.z+= distance*(Math.abs(objectCurrent.z)/Math.abs(objectCurrent.x))
           }else if(z>x){//270-315度角
-            object.position.x-= distance*( Math.abs( object.position.x)/Math.abs(object.position.z))
+            object.position.x-= distance*(Math.abs(objectCurrent.x)/Math.abs(objectCurrent.z))
             object.position.z+= distance
           }
         }else if(object.position.x<0 && object.position.z>0 &&xz>=innerNum){  // -x  z 
@@ -358,9 +360,9 @@
             object.position.z-= distance
           }else if(x>z){//135-180
             object.position.x+=  distance
-            object.position.z-= distance*( Math.abs( object.position.z)/Math.abs(object.position.x))
+            object.position.z-= distance*(Math.abs(objectCurrent.z)/Math.abs(objectCurrent.x))
           }else if(z>x){//90-135
-            object.position.x+= distance*( Math.abs( object.position.x)/Math.abs(object.position.z))
+            object.position.x+= distance*(Math.abs(objectCurrent.x)/Math.abs(objectCurrent.z))
             object.position.z-= distance
           }
         }else if(object.position.x< 0 && object.position.z<0 && xz>=innerNum ){ // -x -z 
@@ -370,9 +372,9 @@
             object.position.z+= distance
           }else if(x>z){//180-225
             object.position.x+= distance
-            object.position.z+=distance*( Math.abs( object.position.z)/Math.abs(object.position.x))
+            object.position.z+=distance*(Math.abs(objectCurrent.z)/Math.abs(objectCurrent.x))
           }else if(z>x){//225-270
-            object.position.x+= distance*(Math.abs( object.position.x)/Math.abs(object.position.z))
+            object.position.x+= distance*(Math.abs(objectCurrent.x)/Math.abs(objectCurrent.z))
             object.position.z+= distance
           }
         }
@@ -386,6 +388,8 @@
     // 點擊移動事件
     function moveClick(object){
       const objectMesh=rollOverMeshs.find(mesh=>mesh.name==object.name)
+      const objectCurrent=startPostions[object.name]
+      const objectXZ = calcHypotenuse(objectCurrent.x,  objectCurrent.z)//原始邊長
       
       // 清除原有定時器
       if(pageTimer[objectMesh.name]){
@@ -398,62 +402,73 @@
       const  xz=calcHypotenuse(objectMesh.position.x,  objectMesh.position.z) //第三邊
       const  x=Math.abs(objectMesh.position.x)//用於處理偏移量
       const  z=Math.abs(objectMesh.position.z)//用於處理偏移量
-        // console.log(objectMesh.name,objectMesh.position,xz,x,z)
         // x處理
         if(objectMesh.position.x>0 && objectMesh.position.z>0){ // x  z 
           // console.log(111,objectMesh.name,objectMesh.position.x, objectMesh.position.z)
-          if(x==z){//45度角傾斜
+          if(x==z){//45度角傾斜 
+            // console.log("AA")
             objectMesh.position.x+= distance
             objectMesh.position.z+= distance
-          }else if(x>z){//0-45度角
+          }else if(x>z){//0-45度角 正常
+            // console.log("BB")
             objectMesh.position.x+= distance
-            objectMesh.position.z+= distance*( Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x))
+            objectMesh.position.z+= distance*(Math.abs(objectCurrent.z)/Math.abs(objectCurrent.x))
           }else if(z>x){//45-90度角
-            objectMesh.position.x+= distance*( Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z))
+            // console.log("CC")
+            objectMesh.position.x+= distance*(Math.abs(objectCurrent.x)/Math.abs(objectCurrent.z))
             objectMesh.position.z+= distance
           }
         }else if(objectMesh.position.x>0 && objectMesh.position.z<0) {  // x -z 
           // console.log(222, objectMesh.name,objectMesh.position.x, objectMesh.position.z)
-          if(x==z){//315度角傾斜
+          if(x==z){//315度角傾斜 
+            // console.log("AA")
             objectMesh.position.x+= distance
             objectMesh.position.z-= distance
           }else if(x>z){//315-360
+            // console.log("BB")
             objectMesh.position.x+= distance
-            objectMesh.position.z-= distance*( Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x))
-          }else if(z>x){//270-315度角
-            objectMesh.position.x+= distance*( Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z))
+            objectMesh.position.z-= distance*(Math.abs(objectCurrent.z)/Math.abs(objectCurrent.x))
+          }else if(z>x){//270-315度角 正常
+            // console.log("CC") 
+            objectMesh.position.x+= distance*(Math.abs(objectCurrent.x)/Math.abs(objectCurrent.z))
             objectMesh.position.z-= distance
           }
         }else if(objectMesh.position.x<0 && objectMesh.position.z>0 ){  // -x  z 
           // console.log(333,objectMesh.name,objectMesh.position.x, objectMesh.position.z)
           if(x==z){//135
+            // console.log("AA")
             objectMesh.position.x-= distance
             objectMesh.position.z+= distance
-          }else if(x>z){//135-180
+          }else if(x>z){//135-180 需調整
+            // console.log("BB")
             objectMesh.position.x-= distance
-            objectMesh.position.z+= distance*( Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x))
-          }else if(z>x){//90-135
-            objectMesh.position.x-= distance*( Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z))
+            objectMesh.position.z+= distance*(Math.abs(objectCurrent.z)/Math.abs(objectCurrent.x))
+          }else if(z>x){//90-135 正常
+            // console.log("CC")
+            objectMesh.position.x-= distance*(Math.abs(objectCurrent.x)/Math.abs(objectCurrent.z))
             objectMesh.position.z+= distance
           }
         }else if(objectMesh.position.x< 0 && objectMesh.position.z<0  ){ // -x -z 
           // console.log(444,objectMesh.name,objectMesh.position.x, objectMesh.position.z)
           if(x==z){//225
+            // console.log("AA")
             objectMesh.position.x-= distance
             objectMesh.position.z-= distance
           }else if(x>z){//180-225
+            // console.log("BB")
             objectMesh.position.x-= distance
-            objectMesh.position.z-=distance*( Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x))
-          }else if(z>x){//225-270
-            objectMesh.position.x-= distance*(Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z))
+            objectMesh.position.z-= distance*(Math.abs(objectCurrent.z)/Math.abs(objectCurrent.x))
+          }else if(z>x){//225-270  正常
+            // console.log("CC")
+            objectMesh.position.x-= distance*(Math.abs(objectCurrent.x)/Math.abs(objectCurrent.z))
             objectMesh.position.z-= distance
           }
         }
-        
-         const objectCurrent=startPostions[object.name]
-         const objectXZ = calcHypotenuse(objectCurrent.x,  objectCurrent.z)//原始邊長
-        //  console.log(xz,objectXZ,objectCurrent)
+       
+        //  console.log('distanceZ:',distance*(Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z)), 'distanceX',distance*(Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x)))
+
          if(xz>=objectXZ){//回退的邊長大於初始邊長
+          // console.log('xz:',xz,'objectXZ:',objectXZ,'absX:',x,'absZ:',z,'xx:',objectCurrent.x,'zz:',objectCurrent.z)
           //清除定時器
           if(pageTimer[objectMesh.name]){clearInterval(pageTimer[objectMesh.name])}
           //重置坐標
@@ -464,31 +479,6 @@
          }
           render();
       },1)
-    }
-
-    // 單個移動事件
-    function oneAutoMove(objectMesh,randomTimer){
-      pageTimer[objectMesh.name]=setInterval(()=>{
-          // console.log(objectMesh.position.x,objectMesh.position.z,pageTimer[objectMesh.name])
-          // x處理
-          if(objectMesh.position.x>=innerNum){
-            objectMesh.position.x= objectMesh.position.x-distance
-            if(objectMesh.position.x<=innerNum)clearInterval(pageTimer[objectMesh.name])
-          }else if(objectMesh.position.x<=-innerNum){
-            objectMesh.position.x= objectMesh.position.x+distance
-            if(objectMesh.position.x>=-innerNum)clearInterval(pageTimer[objectMesh.name])
-          }
-          
-          // z處理
-          if(objectMesh.position.z>=innerNum){
-            objectMesh.position.z= objectMesh.position.z-distance
-            if(objectMesh.position.z<=innerNum)clearInterval(pageTimer[objectMesh.name])
-          }else if(objectMesh.position.z<=-innerNum){
-            objectMesh.position.z= objectMesh.position.z+distance
-            if(objectMesh.position.z>=-innerNum)clearInterval(pageTimer[objectMesh.name])
-          }
-          render();
-        }, randomTimer)
     }
 
     // 隨機速度
