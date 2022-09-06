@@ -36,9 +36,7 @@
 <body style="margin: 0; overflow: hidden">
    <div id="three" style="position: relative; z-index:100;">
     <div style="display: flex; flex-direction: column; align-items: flex-end;  position: fixed; top: 10px; right: 2vw;  color: red;">
-        <p style="border: 1px solid black; padding: 5px;">对象：<sapn id="current"></sapn></p>
         <p id="seconds" style="border: 1px solid black; padding: 5px;">秒數：30</p>
-        <p id="score" style="border: 1px solid black; padding: 5px;">分數：0</p>
         <button id="startButton" style="padding: 5px;width: 78px; border-radius: 10%;">背景音樂</button>
       </div>
     </div>
@@ -82,17 +80,13 @@
     var controls;
     var score,seconds;
     
-    var pointer;
     let num = 0;
     const mouse = new THREE.Vector2();
-	  let INTERSECTED;//當前點擊對象
     const objectNum=10;//對象數量
 
 
     // clock 和動畫有關
     const clock = new THREE.Clock();
-    // mixer 和動畫有關
-    let mixer1,mixer2,mixer3,mixer4;
 
     const distance=1000;//移動距離
     const innerNum=12000//距離圓形多少停下 最小邊界
@@ -109,29 +103,20 @@
     // 倒计时计分
     function timers(){
         seconds=30
-        score=0
         window.timer =  setInterval(() => {
             seconds -= 1;
             $("#seconds").text(`秒數：${seconds||0}`)
             if (seconds <= 0) {
                 seconds=30
-                score=0
                 $("#seconds").text(`秒數：${seconds}`)
-                $("#score").text(`分數：${score}`)
                 // 清空定时器
                 clearInterval( window.timer)
                 // 重新开始计时
                 timers();//重新算分
                 // 移除重新开始前的对象(兔子)
-                GLTFobjects?.forEach(function(object) {
-                    scene.remove(object)
-                    // object.material.dispose();
-                });
-                GLTFobjects=[]//装的对象重置
-                allActions=[]//動畫對象重置
+          
                 num=0//重置移除三个的数量控制重新开始
                 cube();//重新产生对象（兔子）
-                emptyNums=[]//清空重複點擊下下標集
             }
         }, 1000);
      }
@@ -157,7 +142,6 @@
         // scene.add(axes);
 
         raycaster = new THREE.Raycaster();//3d世界鼠標選中物體獲取器
-        pointer = new THREE.Vector2();//二维向量
 
         //antialias:true增加抗锯齿效果 alpha: true 允许透明
         renderer = new THREE.WebGLRenderer({antialias:true,alpha: true});
@@ -180,7 +164,6 @@
         // directionalLight.position.set( 0, 0, 0).normalize();
         // scene.add( directionalLight );
         renderer.domElement.addEventListener('click', onClick, false);
-        // renderer.domElement.addEventListener( 'pointermove', onPointerMove );
 
         // 當視窗大小改變時
         window.addEventListener('resize', onWindowResize);
@@ -224,8 +207,6 @@
         return state==0?Math.floor(Math.random() * value)+min:-(Math.floor(Math.random() * value)+min);
     }
 
-    let GLTFobjects=[]//模型對象 用於刪除功能
-    let allActions=[]
     const startPostions={}
 
     //  创建一个模型
@@ -254,7 +235,6 @@
                     mixers[`mixer${currentNum}`]=mixer
                     action.play();
                     const actionJump = mixer.clipAction(gltf.animations[3]);
-                    allActions.push([action,actionJump])
                 
                     gltf.scene.traverse( function ( child ) {
                         //模型看向中心
@@ -262,7 +242,6 @@
                         // console.log("加載模型",`cube${value}`)
                         child.name=`cube${currentNum}`// 根据名字进行删除
                         if(child.type === "Group") {
-                            GLTFobjects.push(child);
                             rollOverMeshs.push(child);
                             moveAutoEvent(child);
                         }
@@ -292,33 +271,9 @@
         if ( intersects.length > 0 ) {
              // 點擊到3D內容
             const object = intersects[0].object;
-            const current=document.getElementById('current')
-            current.innerText=object.name
-            // removeEvent(object);
             moveClick(object);
         }
       
-    }
-
-    // 移除事件
-    let emptyNums=[]// 避免在跳的過程中重複點擊兔子，每次輪迴編號0,1,2
-    function removeEvent(object){
-        // 點擊模型坐標
-        const gltfIndex=GLTFobjects.findIndex(gltf=>gltf.name==object.name)
-        if(gltfIndex!=-1){
-            if(!emptyNums.includes(gltfIndex)){
-                emptyNums.push(gltfIndex)
-                score++
-                $("#score").text(`分數：${score||0}`)
-                num++;
-                allActions[gltfIndex][0].stop();//停止原理動畫
-                allActions[gltfIndex][1].play();//點擊後的動畫
-                // 兔子往上面y軸多一點
-                GLTFobjects[gltfIndex].position.y=10000
-                animationToggleRemove(gltfIndex);
-            }
-        }
-       
     }
 
     // 持续重繪
@@ -335,17 +290,6 @@
             stats.update();
     }
 
-    // 鼠標經過事件
-    function onPointerMove(event) {
-        pointer.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
-        raycaster.setFromCamera( pointer, camera );
-        const intersects = raycaster.intersectObjects( scene.children, false );
-            if ( intersects.length > 0 ) {
-                const intersect = intersects[0];
-                render();
-            }
-     }
-
     //  釋放空間
      function destory(){
         scene.clear();
@@ -359,39 +303,6 @@
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    // 定時移除兔子
-    function animationToggleRemove(gltfIndex) {
-        let secondNum=1
-        window.gltfIndex =  setInterval(() => {
-            const audioElement = document.getElementById('rabbitMusic');
-            audioElement.play();
-        
-            secondNum -= 1;
-            if(secondNum<=0){
-                // 移除點擊的兔子
-                scene.remove(GLTFobjects[gltfIndex]);  
-                scene.traverse((child) => {
-                if (child.material) {
-                    child.material.dispose();
-                }
-                child = null;
-                });
-                secondNum=1
-                clearInterval(window.gltfIndex)
-
-               // 点击了三个对象后重置对象
-                if(num>=3){
-                    GLTFobjects=[]
-                    cube();//重新創建對象
-                    num=0
-                    emptyNums=[]//重複點擊下標集清空              
-                    allActions=[]//動畫對象重置
-                }
-            }
-        },1000)
-        // 點擊兔子播放音樂
     }
 
     // 加載背景音樂(chrome允許點擊播放，自動播放需要滿足一些條件及設置)
