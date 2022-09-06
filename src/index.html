@@ -83,6 +83,7 @@
     
     let num = 0;
     const mouse = new THREE.Vector2();
+    // let mixer1,mixer2,mixer3,mixer4,mixer5;
 
     // clock 和動畫有關
     const clock = new THREE.Clock();
@@ -234,7 +235,25 @@
                     }
                      //   動畫類型  Walk、Run、Eat、Jump、Idle、Rest  
                       const mixer = new THREE.AnimationMixer(gltf.scene);//所有動畫
+                      // let action = mixer.clipAction(gltf.animations[0]);
                       let action = mixer.clipAction(gltf.animations[0]);
+                      // if(currentNum==1){
+                      //     action = mixer.clipAction(gltf.animations[0]);
+                      //     mixer1=mixer
+                      // }else if(currentNum==2){
+                      //     action = mixer.clipAction(gltf.animations[0]);
+                      //     mixer2=mixer
+                      // }else if(currentNum==3){
+                      //     action = mixer.clipAction(gltf.animations[0]);
+                      //     mixer3=mixer
+                      // }else if(currentNum==4){
+                      //     action = mixer.clipAction(gltf.animations[0]);
+                      //     mixer4=mixer
+                      // }else if(currentNum==5){
+                      //     action = mixer.clipAction(gltf.animations[0]);
+                      //     mixer5=mixer
+                      // }
+
                       mixers[`mixer${currentNum}`]=mixer
                       action.play();
                       gltf.scene.traverse( function ( child ) {
@@ -284,9 +303,16 @@
            // 會影響看向世界坐標中心
            let delta = clock.getDelta();
                delta *= 0.5;
-            for(let i=1;i<=objectNum;i++){
+           for(let i=1;i<=objectNum;i++){
               if (mixers[`mixer${i}`]) mixers[`mixer${i}`].update(delta);
-            }
+           }
+
+            // if(mixer1) mixer1.update(delta);
+            // if(mixer2) mixer2.update(delta);
+            // if(mixer3) mixer3.update(delta);
+            // if(mixer4) mixer4.update(delta);
+            // if(mixer5) mixer5.update(delta);
+
             controls.update();
             stats.update();
     }
@@ -319,6 +345,7 @@
 
     // 單個自動移動事件
     function moveAutoEvent(object){
+      // object.lookAt(camera.position)
       const objectCurrent=startPostions[object.name]
       let xz,x,z
       // if(pageTimer[object.name]){clearInterval(pageTimer[object.name])}
@@ -389,7 +416,6 @@
       const objectMesh=rollOverMeshs.find(mesh=>mesh.name==object.name)
       const objectCurrent=startPostions[object.name]
       const objectXZ = calcHypotenuse(objectCurrent.x,  objectCurrent.z)//原始邊長
-      
       // 清除原有定時器
       if(pageTimer[objectMesh.name]){
         const audioElement = document.getElementById('rabbitMusic');
@@ -465,7 +491,6 @@
         }
        
         //  console.log('distanceZ:',distance*(Math.abs( objectMesh.position.x)/Math.abs(objectMesh.position.z)), 'distanceX',distance*(Math.abs( objectMesh.position.z)/Math.abs(objectMesh.position.x)))
-
          if(xz>=objectXZ){//回退的邊長大於初始邊長
           // console.log('xz:',xz,'objectXZ:',objectXZ,'absX:',x,'absZ:',z,'xx:',objectCurrent.x,'zz:',objectCurrent.z)
           //清除定時器
