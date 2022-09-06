@@ -36,7 +36,8 @@
 <body style="margin: 0; overflow: hidden">
    <div id="three" style="position: relative; z-index:100;">
     <div style="display: flex; flex-direction: column; align-items: flex-end;  position: fixed; top: 10px; right: 2vw;  color: red;">
-        <p id="seconds" style="border: 1px solid black; padding: 5px;">秒數：30</p>
+      <!-- <p style="border: 1px solid black; padding: 5px;">對象：<span id="name"></span></p> -->
+      <p id="seconds" style="border: 1px solid black; padding: 5px;">秒數：30</p>
         <button id="startButton" style="padding: 5px;width: 78px; border-radius: 10%;">背景音樂</button>
       </div>
     </div>
@@ -82,14 +83,13 @@
     
     let num = 0;
     const mouse = new THREE.Vector2();
-    const objectNum=10;//對象數量
-
 
     // clock 和動畫有關
     const clock = new THREE.Clock();
 
+    const objectNum=5;//對象數量
     const distance=1000;//移動距離
-    const innerNum=12000//距離圓形多少停下 最小邊界
+    const innerNum=15000//距離圓形多少停下 最小邊界
     const maxNum=140000
 
     // 多個對象
@@ -103,24 +103,30 @@
   
     // 倒计时计分
     function timers(){
-        seconds=10
+        seconds=30
         window.timer =  setInterval(() => {
             seconds -= 1;
             $("#seconds").text(`秒數：${seconds||0}`)
             if (seconds <= 0) {
-                seconds=10
+                seconds=30
                 $("#seconds").text(`秒數：${seconds}`)
                 // 清空定时器
                 clearInterval( window.timer)
-                // 重新开始计时
-                cube();//重新产生对象（兔子）
                 rollOverMeshs?.forEach(function(object) {
                     scene.remove(object)
                 });
+
+                // 清除對象的定時器
+                for(let i=1;i<=objectNum;i++){
+                  if (pageTimer[`cube${i}`]) clearInterval(pageTimer[`cube${i}`])
+                }
+           
                 rollOverMeshs=[]
                 mixers={}
                 startPostions={}
                 pageTimer={}
+               
+                cube();//重新产生对象（兔子）
                 timers();//重新算分
             }
         }, 1000);
@@ -166,12 +172,12 @@
         window.addEventListener('resize', onWindowResize);
 
         // 陀螺仪控制器
-        // controls = new DeviceOrientationControls(camera);
-        // controls.connect();
+        controls = new DeviceOrientationControls(camera);
+        controls.connect();
        
         // 轨迹控制器
-        controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0, 0);
+        // controls = new OrbitControls(camera, renderer.domElement);
+        // controls.target.set(0, 0, 0);
 
         plane();
         cube(rollOverMeshs);
@@ -203,10 +209,9 @@
         return state==0?Math.floor(Math.random() * value)+min:-(Math.floor(Math.random() * value)+min);
     }
 
-
-
     //  创建一个模型
     function cube(){
+      
         let currentNum=0
          // 加载模型
         const loader = new GLTFLoader();
@@ -215,24 +220,24 @@
             // x z轴值
             for(let k=0;k<2;k++){
               const positionIndex= Math.floor(Math.random() * 2)//四個坐標系
-              position.push(random(positionIndex,50000,innerNum))//第二位參數
+              position.push(random(positionIndex,100000,innerNum))//第二位參數
             }
             loader.load('Voxel_RabbitB.glb', function (gltf) {
                    currentNum++      
                     // 设置模型缩放比例
                     gltf.scene.scale.set(80000,80000,80000);
                     gltf.scene.position.set(position[0],0, position[1])
-                    startPostions[`cube${currentNum}`]={x:position[0],z:position[1]}// 模型原始坐標
-                    
-                    //   動畫類型  Walk、Run、Eat、Jump、Idle、Rest  
-                    //   三只动的图纸
-                    const mixer = new THREE.AnimationMixer(gltf.scene);//所有動畫
-                    let action = mixer.clipAction(gltf.animations[0]);
-                    mixers[`mixer${currentNum}`]=mixer
-                    action.play();
-                    const actionJump = mixer.clipAction(gltf.animations[3]);
-                
-                    gltf.scene.traverse( function ( child ) {
+                    // 模型原始坐標
+                    startPostions[`cube${currentNum}`]={
+                      x:position[0],
+                      z:position[1]
+                    }
+                     //   動畫類型  Walk、Run、Eat、Jump、Idle、Rest  
+                      const mixer = new THREE.AnimationMixer(gltf.scene);//所有動畫
+                      let action = mixer.clipAction(gltf.animations[0]);
+                      mixers[`mixer${currentNum}`]=mixer
+                      action.play();
+                      gltf.scene.traverse( function ( child ) {
                         //模型看向中心
                         child.lookAt(camera.position)
                         child.name=`cube${currentNum}`// 根据名字进行删除
@@ -266,9 +271,10 @@
         if ( intersects.length > 0 ) {
              // 點擊到3D內容
             const object = intersects[0].object;
+            // const name =document.getElementById('name')
+            // name.innerText=object.name
             moveClick(object);
         }
-      
     }
 
     // 持续重繪
@@ -313,11 +319,13 @@
 
     // 單個自動移動事件
     function moveAutoEvent(object){
+      let xz,x,z
+      // if(pageTimer[object.name]){clearInterval(pageTimer[object.name])}
       // 自動移動
       pageTimer[object.name]=setInterval(()=>{
-        const  xz=calcHypotenuse(object.position.x,  object.position.z) //第三邊
-        const x=Math.abs(object.position.x)//用於處理偏移量
-        const z=Math.abs(object.position.z)//用於處理偏移量
+         xz=calcHypotenuse(object.position.x,  object.position.z) //第三邊
+         x=Math.abs(object.position.x)//用於處理偏移量
+         z=Math.abs(object.position.z)//用於處理偏移量
         // x處理
         if(object.position.x>0 && object.position.z>0&&xz>=innerNum){ // x  z 
           // console.log(111,object.name,object.position.x, object.position.z)
@@ -377,15 +385,20 @@
      
     // 點擊移動事件
     function moveClick(object){
-      let xz,x,z;
       const objectMesh=rollOverMeshs.find(mesh=>mesh.name==object.name)
+      
       // 清除原有定時器
-      clearInterval(pageTimer[objectMesh.name])
+      if(pageTimer[objectMesh.name]){
+        const audioElement = document.getElementById('rabbitMusic');
+        audioElement.play();
+        clearInterval(pageTimer[objectMesh.name])
+      }
       // 快速回退
       pageTimer[objectMesh.name]=setInterval(()=>{
-        xz=calcHypotenuse(objectMesh.position.x,  objectMesh.position.z) //第三邊
-        x=Math.abs(objectMesh.position.x)//用於處理偏移量
-        z=Math.abs(objectMesh.position.z)//用於處理偏移量
+      const  xz=calcHypotenuse(objectMesh.position.x,  objectMesh.position.z) //第三邊
+      const  x=Math.abs(objectMesh.position.x)//用於處理偏移量
+      const  z=Math.abs(objectMesh.position.z)//用於處理偏移量
+        // console.log(objectMesh.name,objectMesh.position,xz,x,z)
         // x處理
         if(objectMesh.position.x>0 && objectMesh.position.z>0){ // x  z 
           // console.log(111,objectMesh.name,objectMesh.position.x, objectMesh.position.z)
@@ -442,7 +455,7 @@
         //  console.log(xz,objectXZ,objectCurrent)
          if(xz>=objectXZ){//回退的邊長大於初始邊長
           //清除定時器
-          clearInterval(pageTimer[objectMesh.name])
+          if(pageTimer[objectMesh.name]){clearInterval(pageTimer[objectMesh.name])}
           //重置坐標
           objectMesh.position.x= objectCurrent.x
           objectMesh.position.z= objectCurrent.z
@@ -480,7 +493,7 @@
 
     // 隨機速度
     function mathRandow(){
-      return  Math.floor(Math.random()*100+20)
+      return  Math.floor(Math.random()*150+30)
     }
 
     // 第三邊
