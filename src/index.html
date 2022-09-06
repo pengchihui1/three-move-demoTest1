@@ -76,9 +76,9 @@
     import { OrbitControls } from "./js/controls/OrbitControls.js";
     import { GLTFLoader } from './js/loaders/GLTFLoader.js';
 
-    var camera, scene, renderer,raycaster,container,stats,number;
+    var camera, scene, renderer,raycaster,container,stats;
     var controls;
-    var score,seconds;
+    var seconds;
     
     let num = 0;
     const mouse = new THREE.Vector2();
@@ -93,30 +93,35 @@
     const maxNum=140000
 
     // 多個對象
-    const rollOverMeshs=[]
-    const pageTimer = {};  // 计时器数组
-    const mixers={}
+    let rollOverMeshs=[]//裝多個對象
+    let pageTimer = {};  // 计时器数组
+    let mixers={}
+    let startPostions={} //舊坐標
 
     main();
     animate();
   
     // 倒计时计分
     function timers(){
-        seconds=30
+        seconds=10
         window.timer =  setInterval(() => {
             seconds -= 1;
             $("#seconds").text(`秒數：${seconds||0}`)
             if (seconds <= 0) {
-                seconds=30
+                seconds=10
                 $("#seconds").text(`秒數：${seconds}`)
                 // 清空定时器
                 clearInterval( window.timer)
                 // 重新开始计时
-                timers();//重新算分
-                // 移除重新开始前的对象(兔子)
-          
-                num=0//重置移除三个的数量控制重新开始
                 cube();//重新产生对象（兔子）
+                rollOverMeshs?.forEach(function(object) {
+                    scene.remove(object)
+                });
+                rollOverMeshs=[]
+                mixers={}
+                startPostions={}
+                pageTimer={}
+                timers();//重新算分
             }
         }, 1000);
      }
@@ -131,15 +136,7 @@
         //添加一个透视相机   多少度视角，相机的宽高比，从距离相机多远的位置开始渲染，距离相机多远的位置截止渲染
         camera = new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight, 1, 200000);
         camera.position.set(0, 50000, 0);//设置相机位置
-        // camera.rotation.set(0, 0, 0)
-        // camera.up.x = 1;//相机以哪个方向为上方
-        // camera.up.y = 0;
-        // camera.up.z = 0;
         
-        // 本地坐标
-        // var axes = new THREE.AxisHelper(100);//参数设置了三条轴线的长度
-        // // axes.rotation.y =-0.5 * Math.PI;
-        // scene.add(axes);
 
         raycaster = new THREE.Raycaster();//3d世界鼠標選中物體獲取器
 
@@ -178,9 +175,8 @@
 
         plane();
         cube(rollOverMeshs);
-        // timers();//30秒重新開始
+        timers();//30秒重新開始
         backgroundMusic();//音樂
-  
     }
 
     //创建一个平面
@@ -207,7 +203,7 @@
         return state==0?Math.floor(Math.random() * value)+min:-(Math.floor(Math.random() * value)+min);
     }
 
-    const startPostions={}
+
 
     //  创建一个模型
     function cube(){
@@ -239,7 +235,6 @@
                     gltf.scene.traverse( function ( child ) {
                         //模型看向中心
                         child.lookAt(camera.position)
-                        // console.log("加載模型",`cube${value}`)
                         child.name=`cube${currentNum}`// 根据名字进行删除
                         if(child.type === "Group") {
                             rollOverMeshs.push(child);
