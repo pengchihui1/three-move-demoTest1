@@ -34,7 +34,10 @@
 
         #seconds,#startButton,#startMyButton{
           background: rgba(0, 0, 0, 0.3);
-            color: white;
+          color: white;
+          border: 1px solid white;
+          padding: 5px;
+          border-radius: 5%;
         }
 
         #toast_content_bg{
@@ -55,8 +58,8 @@
    <div id="three" style="position: relative; ">
     <div style="display: flex; flex-direction: column; align-items: flex-end;  position: fixed; top: 10px; right: 2vw;  color: red;">
       <!-- <p style="border: 1px solid black; padding: 5px;">對象：<span id="name"></span></p> -->
-        <p id="seconds" style="border: 1px solid black; padding: 5px;">秒數：30</p>
-        <button id="startButton" style="padding: 5px;width: 78px; border-radius: 10%;">背景音樂</button>
+        <p id="seconds" >秒數：30</p>
+        <button id="startButton" style="width: 78px;">背景音樂</button>
       </div>
     </div>
   </div>
@@ -1017,7 +1020,7 @@ function textToast(msg, option) {
     clearTimeout(toastDiv.timmer);
     showHide('hide');
     window.removeEventListener('deviceorientation', () => { });
-    textToast('未獲取得動傳感器，遊戲結束！', {
+    textToast('未獲取得運動傳感器，遊戲結束！', {
       faded: false,
       isbg: true,
       type: 'none',
