@@ -37,7 +37,7 @@
           background: rgba(0, 0, 0, 0.3);
           color: white;
           border: 1px solid white;
-          padding: 5px;
+          /* padding: 5px; */
           border-radius: 5%;
         }
 
@@ -90,7 +90,7 @@
     <div style="display: flex; flex-direction: column; align-items: flex-end;  position: fixed; top: 10px; right: 2vw;  color: red;">
       <!-- <p style="border: 1px solid black; padding: 5px;">對象：<span id="name"></span></p> -->
         <p id="seconds" >秒數：30</p>
-        <button id="startButton" >背景音樂</button>
+        <p id="startButton" >背景音樂</p>
       </div>
     </div>
   </div>
@@ -947,7 +947,7 @@ function textToast(msg, option) {
 
   if (showFlag) {
     html += "<div style='margin:3px;text-align: center;'>"
-      + "<input id='confirmEventDiv' type='button' value='确定' style='width:85px;height:30px;color:white;border:none;cursor:pointer;background-color:rgb(187, 28, 28);letter-spacing: 6px;'>"
+      + "<input id='confirmEventDiv' type='button' value='確認' style='width:85px;height:30px;color:white;border:none;cursor:pointer;background-color:rgb(187, 28, 28);letter-spacing: 6px;'>"
       + "<input id='closeEventDiv' type='button' value='取消' style='width:85px;height:30px;color:white;border:none;cursor:pointer;background-color:slategray;margin-left: 20px;letter-spacing: 6px;'>"
   }
 
